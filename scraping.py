@@ -1,4 +1,5 @@
 from selenium import webdriver
+from selenium.common.exceptions import NoSuchElementException
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.by import By
 from amazoncaptcha import AmazonCaptcha
@@ -95,7 +96,26 @@ def scraping() -> None:
         orderDate = orderDate[11:]
         print(orderDate)
         
+        # Order Grand Total
+        orderTotal = driver.find_element(By.XPATH, "//div[@class = 'a-column a-span5 a-text-right a-span-last']//span[@class = 'a-color-base a-text-bold']").text
+        print(orderTotal)
+        
+        # Payment Method
+        paymentMethod = driver.find_element(By.XPATH, "//div[@class = 'a-row pmts-payments-instrument-details']//span[@class = 'a-list-item']").text
+        print(paymentMethod)
+        
+        # Shipping Address
+        AddressLine1 = driver.find_element(By.XPATH, "//div[@class = 'displayAddressDiv']//li[@class = 'displayAddressLI displayAddressAddressLine1']").text
+        cityStateZip = driver.find_element(By.XPATH, "//div[@class = 'displayAddressDiv']//li[@class = 'displayAddressLI displayAddressCityStateOrRegionPostalCode']").text
+        country = driver.find_element(By.XPATH, "//div[@class = 'displayAddressDiv']//li[@class = 'displayAddressLI displayAddressCountryName']").text
+        shippingAddress = AddressLine1 + ", " + cityStateZip + ", " + country
+        print(shippingAddress)
+        
         # Loop following attributes
+        
+        # Item Image
+        itemImage = driver.find_element(By.CLASS_NAME, "yo-critical-feature").get_attribute('src')
+        print(itemImage)
         
         # Total Before Tax
         totalBeforeTax = driver.find_element(By.XPATH, "//span[@class = 'a-size-small a-color-price']").text
@@ -105,10 +125,45 @@ def scraping() -> None:
         itemName = driver.find_element(By.XPATH, "//div[@class = 'a-fixed-left-grid-inner']//div[@class = 'a-row']//a[@class = 'a-link-normal']").text
         print(itemName)
         
+        # URL
+        url = driver.find_element(By.XPATH, "//div[@class = 'a-fixed-left-grid-inner']//div[@class = 'a-row']//a[@class = 'a-link-normal']").get_attribute('href')
+        print(url)
+        
         # Seller
-        seller = driver.find_element(By.XPATH, "//div[@class = 'a-fixed-left-grid-inner']//span[@class = 'a-size-small a-color-secondary']//a[@class = 'a-link-normal']").text
+        seller = driver.find_element(By.XPATH, "//div[@class = 'a-fixed-left-grid-inner']//span[@class = 'a-size-small a-color-secondary']").text
+        seller = seller[9:]
         print(seller)
-        # Delivery Date
+        
+        # Delivery Date / Status
+        infoAvailable = True
+        try:
+            deliveryDate = driver.find_element(By.XPATH, "//span[@class = 'a-size-medium a-color-base a-text-bold']").text
+        except:
+            try:
+                deliveryDate = driver.find_element(By.XPATH, "//span[@class = 'a-size-medium a-text-bold']").text
+            except:
+                infoAvailable = False
+            
+        if (infoAvailable):
+            if (deliveryDate.__contains__("Return")):
+                deliveryDate = "Returned"
+                status = "Returned"
+            elif (deliveryDate.__contains__("Replace")):
+                deliveryDate = "Replaced"
+                status = "Replaced"
+            elif (deliveryDate.__contains__("Delivered")):
+                deliveryDate = deliveryDate[10:]
+                status = "Delivered"
+            elif (deliveryDate.__contains__("Arriving")):
+                deliveryDate = deliveryDate[9:]
+                status = "In Transit"
+        else:
+            deliveryDate = "Unavailable"
+            status = "N/A"
+        print(deliveryDate)
+        print(status)        
+        
+        
         
 
 if __name__ == "__main__":
